@@ -1,0 +1,30 @@
+syntax = "proto3";
+
+package pb;
+option go_package = "./pb";
+
+service LineCoder {
+  rpc ManchesterEncode(ManchesterEncoderIn) returns (ManchesterOut) {}
+  rpc ManchesterDecode(ManchesterDecoderIn) returns (ManchesterOut) {}
+}
+
+message ManchesterOut {
+  int32 id = 1;
+  string decoded =2;
+  string encoded =3;
+  double decodedPulseWidth=4;
+  double encodedPulseWidth=5;
+  string unit =6;
+}
+
+message ManchesterEncoderIn {
+  string decoded =1;
+  double decodedPulseWidth =2;
+  string unit =3;
+}
+
+message ManchesterDecoderIn {
+    string encoded =1;
+    double encodedPulseWidth =2;
+    string unit =3;
+}

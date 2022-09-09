@@ -1,0 +1,36 @@
+services:
+  app:
+    build: .
+    environment:
+      DB_SERVER: "db"
+      DB_USER: "SA"
+      DB_PASSWORD: "Test1234"
+      DB_PORT: "5432"
+      DB_NAME: "LineCodeDB"
+      DB_SSL_MODE: "disable"
+      DB_TIME_ZONE: "America/New_York"      
+
+    ports:
+      - "8080:8080"
+      - "9000:9000"
+    links:
+      - db
+  
+  db:
+    image: postgres
+    restart: always
+    environment:
+      POSTGRES_USER: "SA"
+      POSTGRES_PASSWORD: "Test1234"
+      POSTGRES_DB: "LineCodeDB"
+    ports:
+      - "5432:5432"
+
+  pgadmin:    
+    image: dpage/pgadmin4
+    restart: always
+    environment:
+      PGADMIN_DEFAULT_EMAIL: example@admin.com
+      PGADMIN_DEFAULT_PASSWORD: Test1234
+    ports:
+      - "5050:80"
