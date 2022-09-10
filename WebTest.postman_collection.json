@@ -1,0 +1,84 @@
+{
+	"info": {
+		"_postman_id": "d1fac673-36f8-4e88-8c29-f7993ec46a5a",
+		"name": "LineCodeApiTest",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "13050650"
+	},
+	"item": [
+		{
+			"name": "localhost:8080/manchester/decoder",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"encoded\": \"-A+A+A-A+A-A+A-A+A-A+A-A+A-A-A+A\",\n    \"encodedPulseWidth\": 400,\n    \"unit\": \"us\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "localhost:8080/manchester/decoder",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"manchester",
+						"decoder"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "localhost:8080/manchester/encoder",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"decoded\": \"0AE3\",\n    \"decodedPulseWidth\": 400,\n    \"unit\": \"us\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "localhost:8080/manchester/encoder",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"manchester",
+						"encoder"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "localhost:8080/manchester",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:8080/manchester",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"manchester"
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}
