@@ -2,8 +2,6 @@ package web
 
 import (
 	"LineCodeApi/internal/application"
-	"LineCodeApi/internal/core/models"
-	"net/http"
 	"sync"
 
 	"github.com/gin-gonic/gin"
@@ -26,40 +24,22 @@ func (a Adapter) RunAsync(wg *sync.WaitGroup) {
 	wg.Done()
 }
 
-// Run will start the Adapter Web Server and listen
+// Run starts the Adapter Web Server and sets up the Gin router.
+// It defines the HTTP handlers for the endpoints, and delegates the application logic
+// to separate functions which take the api instance and gin.Context as input.
 func (a Adapter) Run() {
 	r := gin.Default()
 
 	r.GET("/manchester", func(c *gin.Context) {
-		ans, err := a.api.GetAllManchester()
-		if err != nil {
-			c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
-		} else {
-			c.JSON(http.StatusOK, ans)
-		}
-
+		getAllManchester(a.api, c)
 	})
 
 	r.POST("/manchester/encoder", func(c *gin.Context) {
-		var manchester models.Manchester
-		c.BindJSON(&manchester)
-		err := a.api.GenerateEncodedManchester(&manchester)
-		if err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		} else {
-			c.JSON(http.StatusCreated, manchester)
-		}
+		generateEncodedManchester(a.api, c)
 	})
 
 	r.POST("/manchester/decoder", func(c *gin.Context) {
-		var manchester models.Manchester
-		c.BindJSON(&manchester)
-		err := a.api.GenerateDecodedManchester(&manchester)
-		if err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		} else {
-			c.JSON(http.StatusCreated, manchester)
-		}
+		generateDecodedManchester(a.api, c)
 	})
 
 	r.Run()
