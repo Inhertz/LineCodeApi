@@ -16,7 +16,7 @@ func NewApplication(db DbPort, logic *domain.Logic) *Application {
 	return &Application{db: db, logic: logic}
 }
 
-// GenerateEncodedManchester is an use case where a manchester encoding is performed and saved
+// GetAllManchester is an use case where all manchester codes stored are fetched
 func (apia Application) GetAllManchester() ([]models.Manchester, error) {
 	var manchesters []models.Manchester
 	err := apia.db.FindAll(&manchesters)
