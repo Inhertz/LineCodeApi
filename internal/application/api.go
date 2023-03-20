@@ -50,6 +50,10 @@ func (apia Application) GenerateEncodedManchester(manchester *models.Manchester)
 
 // GenerateDecodedManchester is an use case where a manchester encoding is performed and saved
 func (apia Application) GenerateDecodedManchester(manchester *models.Manchester) error {
+	err := apia.db.Find("encoded", manchester.Encoded, manchester)
+	if err == nil {
+		return nil
+	}
 	decoded, err := apia.logic.ManchesterDecode(manchester.Encoded)
 	if err != nil {
 		return err
