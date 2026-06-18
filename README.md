@@ -11,7 +11,7 @@ Yet another useless piece of software (at least it's not a TODO API :kekw:) to s
 3. Manchester Model
 4. Domain Logic CODEC
 5. Data Persistence with GORM
-6. Web REST API with Gin
+6. Web REST API with net/http (Go 1.22+)
 7. gRPC Server and Protobuf
 8. Containerizing with Docker
 
@@ -131,15 +131,15 @@ The driven adapter implements the database port interface and follows GORM's app
 
 Persistence should improve the app efficiency by searching the line code before creating it, avoiding unnecessary usage of the core logic.
 
-## __6. Web REST API with Gin__
+## __6. Web REST API with net/http (Go 1.22+)__
 
-This is a driver Adapter, it runs a Web Server on port 8080 using Gin Framework and the application api port. The requests are handled with Gin's router.
+This is a driver Adapter, it runs a Web Server on port 8080 using the standard library's `net/http` package and the application api port. The requests are handled with the native `ServeMux` (leveraging Go 1.22+ routing enhancements).
 
 Some notes:
 
 - The adapter can be run with a go routine using the RunAsync Method, the main func should pass a wait group to sync the execution!
 - A simple Postman collection is provided inside the repo with some examples of requests.
-- Middleware can be added but it should be reserved for Gin framework dependent purposes only, like Auth.
+- Middleware can be added using standard `http.Handler` wrappers.
 
 ## __7. gRPC Server and Protobuf__
 

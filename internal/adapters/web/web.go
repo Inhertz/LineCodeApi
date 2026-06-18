@@ -2,9 +2,8 @@ package web
 
 import (
 	"LineCodeApi/internal/application"
+	"net/http"
 	"sync"
-
-	"github.com/gin-gonic/gin"
 )
 
 type Adapter struct {
@@ -24,23 +23,22 @@ func (a Adapter) RunAsync(wg *sync.WaitGroup) {
 	wg.Done()
 }
 
-// Run starts the Adapter Web Server and sets up the Gin router.
-// It defines the HTTP handlers for the endpoints, and delegates the application logic
-// to separate functions which take the api instance and gin.Context as input.
+// Run starts the Adapter Web Server and sets up the net/http router.
+// It defines the HTTP handlers for the endpoints using the new Go 1.22+ routing.
 func (a Adapter) Run() {
-	r := gin.Default()
+	mux := http.NewServeMux()
 
-	r.GET("/manchester", func(c *gin.Context) {
-		getAllManchester(a.api, c)
+	mux.HandleFunc("GET /manchester", func(w http.ResponseWriter, r *http.Request) {
+		getAllManchester(a.api, w, r)
 	})
 
-	r.POST("/manchester/encoder", func(c *gin.Context) {
-		generateEncodedManchester(a.api, c)
+	mux.HandleFunc("POST /manchester/encoder", func(w http.ResponseWriter, r *http.Request) {
+		generateEncodedManchester(a.api, w, r)
 	})
 
-	r.POST("/manchester/decoder", func(c *gin.Context) {
-		generateDecodedManchester(a.api, c)
+	mux.HandleFunc("POST /manchester/decoder", func(w http.ResponseWriter, r *http.Request) {
+		generateDecodedManchester(a.api, w, r)
 	})
 
-	r.Run()
+	http.ListenAndServe(":8080", mux)
 }

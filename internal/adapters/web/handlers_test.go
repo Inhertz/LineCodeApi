@@ -9,7 +9,6 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -21,12 +20,12 @@ func TestGetAllManchester(t *testing.T) {
 	mockAPI := &mocks.ApplicationMock{ExpectedOutput: expOut}
 
 	w := httptest.NewRecorder()
-	c, _ := gin.CreateTestContext(w)
+	r := httptest.NewRequest(http.MethodGet, "/manchester", nil)
 
-	getAllManchester(mockAPI, c)
+	getAllManchester(mockAPI, w, r)
 
 	assert.Equal(t, http.StatusOK, w.Code)
-	assert.Equal(t, expectedResponse, w.Body.String())
+	assert.JSONEq(t, expectedResponse, w.Body.String())
 
 }
 
@@ -42,14 +41,13 @@ func TestGenerateEncodedManchester(t *testing.T) {
 	mockAPI := &mocks.ApplicationMock{ExpectedOutput: expOut}
 
 	w := httptest.NewRecorder()
-	c, _ := gin.CreateTestContext(w)
-	c.Request = httptest.NewRequest(http.MethodPost, "/manchester/encoder", bytes.NewBufferString(requestBody))
-	c.Request.Header.Set("Content-Type", "application/json")
+	r := httptest.NewRequest(http.MethodPost, "/manchester/encoder", bytes.NewBufferString(requestBody))
+	r.Header.Set("Content-Type", "application/json")
 
-	generateEncodedManchester(mockAPI, c)
+	generateEncodedManchester(mockAPI, w, r)
 
 	assert.Equal(t, http.StatusCreated, w.Code)
-	assert.Equal(t, expectedResponse, w.Body.String())
+	assert.JSONEq(t, expectedResponse, w.Body.String())
 }
 
 func TestGenerateDecodedManchester(t *testing.T) {
@@ -64,12 +62,11 @@ func TestGenerateDecodedManchester(t *testing.T) {
 	mockAPI := &mocks.ApplicationMock{ExpectedOutput: expOut}
 
 	w := httptest.NewRecorder()
-	c, _ := gin.CreateTestContext(w)
-	c.Request = httptest.NewRequest(http.MethodPost, "/manchester/decoder", bytes.NewBufferString(requestBody))
-	c.Request.Header.Set("Content-Type", "application/json")
+	r := httptest.NewRequest(http.MethodPost, "/manchester/decoder", bytes.NewBufferString(requestBody))
+	r.Header.Set("Content-Type", "application/json")
 
-	generateDecodedManchester(mockAPI, c)
+	generateDecodedManchester(mockAPI, w, r)
 
 	assert.Equal(t, http.StatusCreated, w.Code)
-	assert.Equal(t, expectedResponse, w.Body.String())
+	assert.JSONEq(t, expectedResponse, w.Body.String())
 }
