@@ -19,40 +19,46 @@ import (
 
 // Adapter implements the GRPCPort interface
 type Adapter struct {
-	api application.APIPort
+	api  application.APIPort
+	port string
 	pb.UnimplementedLineCoderServer
 }
 
-// NewAdapter creates a new Adapter
-func NewAdapter(api application.APIPort) *Adapter {
-	return &Adapter{api: api}
+// NewAdapter creates a new Adapter listening on the given port
+func NewAdapter(api application.APIPort, port string) *Adapter {
+	return &Adapter{api: api, port: port}
 }
 
 // RunAsync runs the server with a wait group for concurrency
-func (grpca Adapter) RunAsync(wg *sync.WaitGroup) {
-
-	grpca.Run()
-
-	wg.Done()
+func (grpca Adapter) RunAsync(ctx context.Context, wg *sync.WaitGroup) {
+	defer wg.Done()
+	grpca.Run(ctx)
 }
 
 // Run registers the LineCoderServiceServer to a grpcServer and serves on
-// the specified port
-func (grpca Adapter) Run() {
-	var err error
-
-	listen, err := net.Listen("tcp", ":9000")
+// the configured port. Run blocks until ctx is cancelled, then stops the
+// server gracefully.
+func (grpca Adapter) Run(ctx context.Context) {
+	listen, err := net.Listen("tcp", ":"+grpca.port)
 	if err != nil {
-		log.Fatalf("failed to listen on port 9000: %v", err)
+		log.Fatalf("failed to listen on port %s: %v", grpca.port, err)
 	}
 
 	grpcServer := grpc.NewServer()
 	reflection.Register(grpcServer)
 	pb.RegisterLineCoderServer(grpcServer, grpca)
 
-	if err := grpcServer.Serve(listen); err != nil {
-		log.Fatalf("failed to serve gRPC server over port 9000: %v", err)
-	}
+	go func() {
+		if err := grpcServer.Serve(listen); err != nil {
+			log.Fatalf("failed to serve gRPC server on port %s: %v", grpca.port, err)
+		}
+	}()
+	log.Printf("gRPC server listening on port %s", grpca.port)
+
+	<-ctx.Done()
+
+	grpcServer.GracefulStop()
+	log.Println("gRPC server stopped")
 }
 
 // ManchesterEncode returns a completely encoded model to the grpc client

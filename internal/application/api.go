@@ -8,11 +8,11 @@ import (
 // Application implements the APIPort interface
 type Application struct {
 	logic *domain.Logic
-	db    DbPort
+	db    DbPort[models.Manchester]
 }
 
 // NewApplication creates a new Application
-func NewApplication(db DbPort, logic *domain.Logic) *Application {
+func NewApplication(db DbPort[models.Manchester], logic *domain.Logic) *Application {
 	return &Application{db: db, logic: logic}
 }
 

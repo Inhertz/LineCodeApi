@@ -4,7 +4,6 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
-	"math"
 	"strings"
 )
 
@@ -39,53 +38,55 @@ func newManchesterDictionaries() (map[byte]string, map[string]byte) {
 	return encoded, decoded
 }
 
-// byteToManchester generates an int slice from a single byte or uint8
+// byteToManchester generates the Manchester pulse string for a single byte
 func byteToManchester(in byte) string {
-	var out string
+	var b strings.Builder
+	b.Grow(32)
 	for i := 0; i < 8; i++ {
-		mask := in & uint8(math.Pow(2, float64(7-i)))
+		mask := in & (1 << (7 - i))
 		if mask == 0 {
-			out = out + "-A" + "+A"
+			b.WriteString("-A+A")
 		} else {
-			out = out + "+A" + "-A"
+			b.WriteString("+A-A")
 		}
 	}
-	return out
+	return b.String()
 }
 
 // ManchesterEncode takes a string representation of a byte array in Hex and returns its Manchester code
 func (l Logic) ManchesterEncode(in string) (string, error) {
-	var out string
 	arr, err := hex.DecodeString(in)
 	if err != nil {
 		return "", err
 	}
 
+	var b strings.Builder
+	b.Grow(len(arr) * 32)
 	for _, value := range arr {
-		out = out + l.ManchesterEncodeDictionary[value]
+		b.WriteString(l.ManchesterEncodeDictionary[value])
 	}
 
-	return out, nil
+	return b.String(), nil
 }
 
 // ManchesterDecode takes a string representation of a Manchester code and returns its byte array in Hex
 func (l Logic) ManchesterDecode(in string) (string, error) {
-	var out string
-	err := checkManchesterCode(in)
-	if err != nil {
+	if err := checkManchesterCode(in); err != nil {
 		return "", err
 	}
 
-	for i := 0; i < len([]rune(in)); i += 32 {
+	var b strings.Builder
+	b.Grow(len(in) / 16)
+	for i := 0; i+32 <= len(in); i += 32 {
 		pulses := in[i : i+32]
-		byteOut := l.ManchesterDecodeDictionary[pulses]
-		if byteOut == 0 && pulses != "-A+A-A+A-A+A-A+A-A+A-A+A-A+A-A+A" {
+		byteOut, ok := l.ManchesterDecodeDictionary[pulses]
+		if !ok {
 			return "", fmt.Errorf("wrong pulse inside byte: %d", i)
 		}
-		out = out + hex.EncodeToString([]byte{byteOut})
+		b.WriteString(hex.EncodeToString([]byte{byteOut}))
 	}
 
-	return out, nil
+	return b.String(), nil
 }
 
 // checkManchesterCode returns an error if the number of pulses is not multiple of 8

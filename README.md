@@ -127,29 +127,49 @@ Decoding uses the same aproach but reverted!
 
 This Adapter uses GORM to communicate with a Postgres DataBase, on creation, a model migration is performed (Code First). Connection parameters are specified as OS Environmental Variables!
 
-The driven adapter implements the database port interface and follows GORM's approach of passing model's pointers as arguments. Port methods should be reusable between data models.
+The driven adapter implements the database port interface and follows GORM's approach of passing model's pointers as arguments. The port is generic over the data model (`DbPort[T]`), so its methods are reusable between data models.
 
 Persistence should improve the app efficiency by searching the line code before creating it, avoiding unnecessary usage of the core logic.
 
+### Environment Variables
+
+All configuration is provided through OS environment variables:
+
+| Variable       | Description                              | Default  |
+| -------------- | ---------------------------------------- | -------- |
+| `DB_SERVER`    | Postgres host                            | _(none)_ |
+| `DB_USER`      | Postgres user                            | _(none)_ |
+| `DB_PASSWORD`  | Postgres password                        | _(none)_ |
+| `DB_PORT`      | Postgres port                            | _(none)_ |
+| `DB_NAME`      | Postgres database name                   | _(none)_ |
+| `DB_SSL_MODE`  | Postgres SSL mode (e.g. `disable`)       | _(none)_ |
+| `DB_TIME_ZONE` | Postgres time zone (e.g. `UTC`)          | _(none)_ |
+| `WEB_PORT`     | Port for the Web (REST) server           | `8080`   |
+| `GRPC_PORT`    | Port for the gRPC server                 | `9000`   |
+
+The DB variables are required; `WEB_PORT` and `GRPC_PORT` are optional and fall back to their defaults when unset.
+
 ## __6. Web REST API with net/http (Go 1.22+)__
 
-This is a driver Adapter, it runs a Web Server on port 8080 using the standard library's `net/http` package and the application api port. The requests are handled with the native `ServeMux` (leveraging Go 1.22+ routing enhancements).
+This is a driver Adapter, it runs a Web Server using the standard library's `net/http` package and the application api port. The requests are handled with the native `ServeMux` (leveraging Go 1.22+ routing enhancements). The listening port is configurable through the `WEB_PORT` env var (default `8080`).
 
 Some notes:
 
-- The adapter can be run with a go routine using the RunAsync Method, the main func should pass a wait group to sync the execution!
+- The adapter can be run with a go routine using the RunAsync Method, the main func should pass a context and a wait group to sync the execution!
+- The server shuts down gracefully when the context is cancelled (on `SIGINT`/`SIGTERM`), draining in-flight requests with a 10s timeout.
 - A simple Postman collection is provided inside the repo with some examples of requests.
 - Middleware can be added using standard `http.Handler` wrappers.
 
 ## __7. gRPC Server and Protobuf__
 
-This is also a driver Adapter that runs a server on port 9000, it uses Protobuf for go in order to generate the service code. The __"linecode_svc.proto"__ file contains both service and message types.
+This is also a driver Adapter that runs a server, it uses Protobuf for go in order to generate the service code. The __"linecode_svc.proto"__ file contains both service and message types. The listening port is configurable through the `GRPC_PORT` env var (default `9000`).
 
 Some notes:
 
 - The service interface is auto-generated and passed to the adapter through the __"UnimplementedLineCoderServer"__ (also auto-generated).
 - Reflection is activated for testing with grpc-cli!
 - The adapter can be run async (needed if you use several servers) with the RunAsync method, just like the REST API.
+- It also shuts down gracefully (via `GracefulStop`) when the context is cancelled, finishing in-flight RPCs first.
 
 ## __8. Containerizing with Docker__
 

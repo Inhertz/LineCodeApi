@@ -6,15 +6,31 @@ import (
 	"LineCodeApi/internal/adapters/web"
 	"LineCodeApi/internal/application"
 	"LineCodeApi/internal/core/domain"
+	"LineCodeApi/internal/core/models"
+	"context"
 	"fmt"
 	"log"
 	"os"
+	"os/signal"
 	"sync"
+	"syscall"
 )
+
+// getEnv returns the value of the environment variable named by key,
+// or fallback when the variable is unset or empty.
+func getEnv(key, fallback string) string {
+	if v := os.Getenv(key); v != "" {
+		return v
+	}
+	return fallback
+}
 
 func main() {
 
-	dbAdapter, err := db.NewAdapter(fmt.Sprintf("host=%s user=%s password=%s port=%s dbname=%s sslmode=%s TimeZone=%s",
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+	defer stop()
+
+	dbAdapter, err := db.NewAdapter[models.Manchester](fmt.Sprintf("host=%s user=%s password=%s port=%s dbname=%s sslmode=%s TimeZone=%s",
 		os.Getenv("DB_SERVER"),
 		os.Getenv("DB_USER"),
 		os.Getenv("DB_PASSWORD"),
@@ -30,14 +46,15 @@ func main() {
 
 	appApi := application.NewApplication(dbAdapter, domainLogic)
 
-	webAdapter := web.NewAdapter(appApi)
-	grpcAdapter := rpc.NewAdapter(appApi)
+	webAdapter := web.NewAdapter(appApi, getEnv("WEB_PORT", "8080"))
+	grpcAdapter := rpc.NewAdapter(appApi, getEnv("GRPC_PORT", "9000"))
 
 	wg := new(sync.WaitGroup)
 	wg.Add(2)
 
-	go webAdapter.RunAsync(wg)
-	go grpcAdapter.RunAsync(wg)
+	go webAdapter.RunAsync(ctx, wg)
+	go grpcAdapter.RunAsync(ctx, wg)
 
 	wg.Wait()
+	log.Println("all servers stopped, exiting")
 }
